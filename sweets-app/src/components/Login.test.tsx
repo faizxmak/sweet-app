@@ -1,20 +1,15 @@
 /**
  * Login Component Tests
- * Note: This is a basic test structure. For full testing, ensure:
- * 1. @testing-library/react and @testing-library/user-event are installed
- * 2. Vitest is configured in vite.config.ts
- * 3. Login component exports properly and has onSwitchToRegister prop
+ * 
+ * This file has been moved to tests/Login.test.tsx
+ * Please refer to that location for the actual test implementations.
+ * 
+ * To run tests:
+ * 1. npm install
+ * 2. npm test
+ * 
+ * Note: Tests require vitest to be installed via npm install
  */
 
-import { describe, it, expect } from 'vitest';
-
-// Note: These imports require the following packages to be installed:
-// npm install --save-dev vitest @testing-library/react @testing-library/user-event @testing-library/jest-dom
-
-describe('Login Component (Setup Required)', () => {
-  it('should render without errors', () => {
-    // Test structure placeholder
-    // Full tests require proper setup with testing libraries
-    expect(true).toBe(true);
-  });
-});
+// Tests are located in tests/Login.test.tsx
+export {};
