@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useSweets, type Sweet } from '../context/SweetContext'
+import { type Sweet } from '../context/SweetContextValue'
+import { useSweets } from '../context/useSweets'
 import '../styles/AdminPanel.css'
 
 interface AdminPanelProps {
@@ -15,6 +16,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
     price: 500,
     quantity: 10,
     image: '🍬',
+    image_url: '',
     description: '',
     category: 'Traditional',
   })
@@ -29,6 +31,22 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       ...formData,
       [name]: name === 'price' || name === 'quantity' ? parseInt(value) : value,
     })
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Convert image to base64 for simplicity
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64String = reader.result as string
+      setFormData({
+        ...formData,
+        image_url: base64String,
+      })
+    }
+    reader.readAsDataURL(file)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -51,6 +69,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       price: 500,
       quantity: 10,
       image: '🍬',
+      image_url: '',
       description: '',
       category: 'Traditional',
     })
@@ -63,6 +82,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       price: sweet.price,
       quantity: sweet.quantity,
       image: sweet.image,
+      image_url: (sweet as Sweet & { image_url?: string }).image_url || '',
       description: sweet.description,
       category: sweet.category,
     })
@@ -78,6 +98,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
       price: 500,
       quantity: 10,
       image: '🍬',
+      image_url: '',
       description: '',
       category: 'Traditional',
     })
@@ -135,6 +156,23 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                     placeholder="🍬"
                     maxLength={2}
                   />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="image_url">Upload Image</label>
+                  <div className="file-input-wrapper">
+                    <input
+                      id="image_url"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                    />
+                    {formData.image_url && (
+                      <div className="image-preview">
+                        <img src={formData.image_url} alt="Preview" style={{ maxWidth: '100px', maxHeight: '100px' }} />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -231,7 +269,7 @@ export default function AdminPanel({ onBack }: AdminPanelProps) {
                 </tr>
               </thead>
               <tbody>
-                {sweets.map((sweet) => (
+                {sweets.map((sweet: Sweet) => (
                   <tr key={sweet.id} className={sweet.quantity === 0 ? 'out-of-stock-row' : ''}>
                     <td className="emoji-cell">{sweet.image}</td>
                     <td className="name-cell">{sweet.name}</td>

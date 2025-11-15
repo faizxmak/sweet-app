@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
-import { useAuth } from '../context/AuthContext'
-import { useSweets } from '../context/SweetContext'
+import { useAuth } from '../context/useAuth'
+import { useSweets } from '../context/useSweets'
+import { type Sweet } from '../context/SweetContextValue'
 import SweetCard from './SweetCard'
 import AdminPanel from './AdminPanel'
 import '../styles/Dashboard.css'
@@ -16,12 +17,12 @@ export default function Dashboard() {
 
   // Get unique categories
   const categories = useMemo(() => {
-    return ['all', ...new Set(sweets.map((s) => s.category))]
+    return ['all', ...new Set(sweets.map((s: Sweet) => s.category))]
   }, [sweets])
 
   // Filter sweets based on search, price range, and category
   const filteredSweets = useMemo(() => {
-    return sweets.filter((sweet) => {
+    return sweets.filter((sweet: Sweet) => {
       const matchesSearch = sweet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         sweet.description.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesPrice = sweet.price >= priceRange.min && sweet.price <= priceRange.max
@@ -86,7 +87,7 @@ export default function Dashboard() {
             <div className="filter-group">
               <label>Category:</label>
               <div className="category-buttons">
-                {categories.map((category) => (
+                {categories.map((category: string) => (
                   <button
                     key={category}
                     className={`category-btn ${selectedCategory === category ? 'active' : ''}`}
@@ -145,7 +146,7 @@ export default function Dashboard() {
         <section className="products-section">
           {filteredSweets.length > 0 ? (
             <div className="products-grid">
-              {filteredSweets.map((sweet) => (
+              {filteredSweets.map((sweet: Sweet) => (
                 <SweetCard
                   key={sweet.id}
                   sweet={sweet}

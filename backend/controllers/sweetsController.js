@@ -11,9 +11,18 @@ exports.getSweets = async (req, res) => {
 };
 
 exports.createSweet = async (req, res) => {
-  const { name, description, price, category, image_url, created_by } = req.body;
+  const { name, description, price, quantity, category, image, image_url, created_by } = req.body;
   try {
-    const sweet = new Sweet({ name, description, price, category, image_url, created_by });
+    const sweet = new Sweet({ 
+      name, 
+      description, 
+      price, 
+      quantity: quantity || 10,
+      category, 
+      image: image || '🍬',
+      image_url, 
+      created_by 
+    });
     await sweet.save();
     res.status(201).json(sweet);
   } catch (err) {
@@ -23,9 +32,13 @@ exports.createSweet = async (req, res) => {
 
 exports.updateSweet = async (req, res) => {
   const { id } = req.params;
-  const { name, description, price, category, image_url } = req.body;
+  const { name, description, price, quantity, category, image, image_url } = req.body;
   try {
-    const sweet = await Sweet.findByIdAndUpdate(id, { name, description, price, category, image_url }, { new: true });
+    const sweet = await Sweet.findByIdAndUpdate(
+      id, 
+      { name, description, price, quantity, category, image, image_url }, 
+      { new: true }
+    );
     res.json(sweet);
   } catch (err) {
     res.status(400).json({ error: err.message });

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useSweets, type Sweet } from '../context/SweetContext'
+import { type Sweet } from '../context/SweetContextValue'
+import { useSweets } from '../context/useSweets'
 import '../styles/SweetCard.css'
 
 interface SweetCardProps {

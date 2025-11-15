@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
+import api from '../api'
 import '../styles/Auth.css'
 
 interface RegisterProps {
@@ -12,9 +13,12 @@ export default function Register({ onSwitchToLogin }: RegisterProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [adminCode, setAdminCode] = useState('')
   const [error, setError] = useState('')
+  const [step, setStep] = useState<'register' | 'verify-admin'>('register')
+  const [verifyLoading, setVerifyLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
@@ -35,9 +39,90 @@ export default function Register({ onSwitchToLogin }: RegisterProps) {
 
     try {
       await register(username, email, password)
+      setStep('verify-admin')
     } catch {
       setError('Registration failed. Please try again.')
     }
+  }
+
+  const handleVerifyAdmin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setVerifyLoading(true)
+
+    try {
+      await api.post('/api/auth/verify-admin-code', {
+        email,
+        adminCode
+      })
+      
+      setAdminCode('')
+      alert('Admin status granted! You can now manage the sweet shop.')
+      setStep('register')
+      setEmail('')
+      setUsername('')
+      setPassword('')
+      setConfirmPassword('')
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('Failed to verify admin code. Please try again.')
+      }
+    } finally {
+      setVerifyLoading(false)
+    }
+  }
+
+  if (step === 'verify-admin') {
+    return (
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <h1>🍬 Admin Verification</h1>
+            <p>Check your email for the admin code</p>
+          </div>
+
+          <form onSubmit={handleVerifyAdmin} className="auth-form">
+            <div className="form-group">
+              <label htmlFor="admin-code">Admin Code</label>
+              <input
+                id="admin-code"
+                type="text"
+                value={adminCode}
+                onChange={(e) => setAdminCode(e.target.value.toUpperCase())}
+                placeholder="Enter 6-digit code from email"
+                maxLength={6}
+                disabled={verifyLoading}
+              />
+              <small>Check your email for the 6-digit admin verification code</small>
+            </div>
+
+            {error && <div className="error-message">{error}</div>}
+
+            <button type="submit" className="auth-button" disabled={verifyLoading}>
+              {verifyLoading ? 'Verifying...' : 'Verify Admin Code'}
+            </button>
+          </form>
+
+          <div className="auth-footer">
+            <p>
+              <button 
+                type="button" 
+                className="link-button" 
+                onClick={() => {
+                  setStep('register')
+                  setError('')
+                  setAdminCode('')
+                }}
+              >
+                Back to Register
+              </button>
+            </p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -48,7 +133,7 @@ export default function Register({ onSwitchToLogin }: RegisterProps) {
           <p>Join Us Today!</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form onSubmit={handleRegister} className="auth-form">
           <div className="form-group">
             <label htmlFor="username">Username</label>
             <input

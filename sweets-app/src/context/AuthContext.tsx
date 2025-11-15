@@ -1,24 +1,7 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import axios from 'axios';
 import api from '../api';
-
-export interface User {
-  id: string
-  username: string
-  email: string
-  role: 'user' | 'admin'
-}
-
-interface AuthContextType {
-  user: User | null
-  isAuthenticated: boolean
-  isLoading: boolean
-  login: (email: string, password: string) => Promise<void>
-  register: (username: string, email: string, password: string) => Promise<void>
-  logout: () => void
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+import { AuthContext, type User } from './AuthContextValue'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -64,16 +47,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: user.is_admin ? 'admin' : 'user',
       });
       localStorage.setItem('user', JSON.stringify(user));
+      // Note: Token is not provided on registration, user must login after verifying admin code
+      alert(res.data.message || 'Registration successful! Check your email.');
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         alert(err.response?.data?.error || 'Registration failed');
+        throw new Error(err.response?.data?.error || 'Registration failed');
       } else {
         alert('Registration failed');
+        throw new Error('Registration failed');
       }
     } finally {
       setIsLoading(false);
     }
-  } // API call documented above
+  }
 
   // Logout clears user and token
   const logout = () => {
@@ -83,12 +70,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   // Initialize user from localStorage
-  useState(() => {
+  useEffect(() => {
     const savedUser = localStorage.getItem('user')
     if (savedUser) {
       setUser(JSON.parse(savedUser))
     }
-  })
+  }, [])
 
   return (
     <AuthContext.Provider
@@ -104,12 +91,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
 }
