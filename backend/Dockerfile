@@ -1,11 +1,10 @@
-# Multi-stage build for optimized production image
-# Using node:20-slim (81MB) instead of node:20 (920MB) for smaller, faster deployments
-# Note: Minor vulnerabilities in base image are acceptable for this application
-# Production deployments should use WAF and network security
-
-FROM node:20-slim AS builder
+# Build stage with Alpine for minimal dependencies
+FROM alpine:3.18 AS builder
 
 WORKDIR /app
+
+# Install Node.js and npm with security updates
+RUN apk add --no-cache nodejs=18.18.2-r0 npm=9.6.7-r0
 
 # Copy package files
 COPY package*.json ./
@@ -13,23 +12,18 @@ COPY package*.json ./
 # Install production dependencies only
 RUN npm ci --only=production && npm cache clean --force
 
-# Production stage
-FROM node:20-slim
+# Production stage - using minimal distroless image
+FROM gcr.io/distroless/nodejs18-debian11:nonroot
 
 WORKDIR /app
 
-# Copy optimized node_modules from builder
-COPY --from=builder /app/node_modules /app/node_modules
+# Copy app code and dependencies from builder
+COPY --from=builder --chown=nonroot:nonroot /app/node_modules /app/node_modules
+COPY --chown=nonroot:nonroot . .
 
-# Copy application code
-COPY . .
-
-# Security: Run as non-root user
-RUN useradd -m -u 1001 nodejs
-USER nodejs
-
-# Expose application port
+# Expose port
 EXPOSE 5000
 
+# Run as non-root user (distroless default)
 # Start Node.js application
-CMD ["node", "app.js"]
+CMD ["app.js"]
