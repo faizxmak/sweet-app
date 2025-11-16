@@ -4,9 +4,27 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { generateAdminCode, sendAdminCodeEmail } = require('../utils/emailService');
 
+// Validation helpers
+const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const validatePassword = (password) => password && password.length >= 6;
+
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
   try {
+    // Input validation
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    if (!validateEmail(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+    if (!validatePassword(password)) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+    if (name.length < 2 || name.length > 100) {
+      return res.status(400).json({ error: 'Name must be 2-100 characters' });
+    }
+    
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ error: 'Email already registered' });
     
@@ -24,14 +42,14 @@ exports.register = async (req, res) => {
     });
     await user.save();
     
-    // Send admin code via email
+    // Send admin code via email (don't expose code in logs)
     console.log(`📧 Sending admin code to ${email}...`);
     const emailSent = await sendAdminCodeEmail(email, adminCode);
     
     if (emailSent) {
       console.log(`✅ Email sent successfully to ${email}`);
     } else {
-      console.log(`⚠️ Email failed but user registered. Code: ${adminCode}`);
+      console.log(`⚠️ Email failed but user registered.`);
     }
     
     res.status(201).json({ 
@@ -88,6 +106,14 @@ exports.verifyAdminCode = async (req, res) => {
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
+    // Input validation
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password required' });
+    }
+    if (!validateEmail(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+    
     const user = await User.findOne({ email });
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
     const valid = await bcrypt.compare(password, user.password);
