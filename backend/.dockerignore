@@ -1,7 +1,17 @@
 node_modules
 npm-debug.log
 .env
+.env.local
 .git
 .gitignore
 README.md
 tests
+jest.config.js
+.eslintignore
+.eslintrc.json
+.DS_Store
+*.log
+Dockerfile
+.dockerignore
+.github
+.vscode
